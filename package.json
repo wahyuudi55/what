@@ -10,8 +10,8 @@
   "author": "whyuxD",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
-  },
+  "node": "20.x"
+},
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@whiskeysockets/baileys": "npm:@fuxxy-star/baileys",
