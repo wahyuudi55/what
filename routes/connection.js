@@ -3,7 +3,7 @@ const {
   useMultiFileAuthState,
   DisconnectReason,
   delay
-} = require("baileys");
+} = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
 const express = require("express");
