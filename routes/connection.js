@@ -17,22 +17,20 @@ const {
 
 // direktori session (untuk useMultiFileAuthState)
 const sessionDir = path.join(__dirname, "../session");
-
-makeDirIsNotExists(sessionDir).catch(()=>{});
+makeDirIsNotExists(sessionDir).catch(() => {});
 
 // Map in-memory untuk menyimpan socket aktif per nomor pemilik
-// key: phoneNumber (digits only), value: { sock, statePath }
 const activeSockets = new Map();
 
 /**
- * Helper untuk membuat socket dan menyimpan di activeSockets.
- * Jika socket sudah ada, return existing.
+ * Helper untuk membuat socket. Hanya simpan ke activeSockets saat connection === "open".
  */
 async function ensureSocketForNumber(phoneNumber) {
   const pn = String(phoneNumber).replace(/[^0-9]/g, "");
+  // kalau sudah ada socket aktif yang valid, return
   if (activeSockets.has(pn)) {
     const info = activeSockets.get(pn);
-    return info.sock;
+    if (info && info.sock) return info.sock;
   }
 
   const sessionPath = path.join(sessionDir, pn);
@@ -50,21 +48,24 @@ async function ensureSocketForNumber(phoneNumber) {
   sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect } = update;
     console.log(`[${pn}] connection.update =>`, connection);
+
     if (connection === "open") {
-      // simpan socket di map saat open
+      // hanya simpan socket saat benar-benar open
       activeSockets.set(pn, { sock, statePath: sessionPath });
-      console.log(`[${pn}] Socket saved to activeSockets`);
+      console.log(`[${pn}] Socket saved to activeSockets (open)`);
       // notif ke pemilik (opsional)
       try {
         await delay(200);
         await sock.sendMessage(sock.user.id, { text: "_*Berhasil terhubung ke WhatsApp!*_" });
       } catch (e) { /* ignore send errors */ }
+      return;
     }
 
     if (connection === "close") {
       const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
       console.log(`[${pn}] closed with code:`, statusCode);
-      // bersihkan socket dari map
+
+      // hapus dari activeSockets karena sudah close
       if (activeSockets.has(pn)) activeSockets.delete(pn);
 
       if (
@@ -73,7 +74,7 @@ async function ensureSocketForNumber(phoneNumber) {
         statusCode === DisconnectReason.restartRequired ||
         statusCode === DisconnectReason.timedOut
       ) {
-        // coba reconnect: make new socket (rekursif)
+        // coba reconnect (akan membuat socket baru)
         try {
           console.log(`[${pn}] trying reconnect...`);
           await ensureSocketForNumber(pn);
@@ -81,12 +82,12 @@ async function ensureSocketForNumber(phoneNumber) {
           console.error(`[${pn}] reconnect failed:`, e);
         }
       } else if (statusCode === DisconnectReason.loggedOut) {
-        // hapus session files
+        // hapus session files jika logout
         try {
           await deleteTemp(false, sessionPath);
         } catch (e) { /* ignore */ }
       } else {
-        try { sock.end("Unknown DisconnectReason: " + statusCode + "|" + connection); } catch(e){}
+        try { sock.end("Unknown DisconnectReason: " + statusCode + "|" + connection); } catch (e) { /* ignore */ }
       }
     }
   });
@@ -94,8 +95,8 @@ async function ensureSocketForNumber(phoneNumber) {
   // update credentials
   sock.ev.on("creds.update", saveCreds);
 
-  // store tentatively (will be replaced on 'open')
-  activeSockets.set(pn, { sock, statePath: sessionPath });
+  // Catatan: TIDAK menyimpan socket ke activeSockets di sini.
+  // activeSockets hanya diset saat event 'open' di atas.
 
   return sock;
 }
@@ -103,12 +104,7 @@ async function ensureSocketForNumber(phoneNumber) {
 /**
  * GET /connect
  * - Jika belum ter-registered -> generate pairing code dan kembalikan { code }
- * - Jika sudah registered/connected -> kembalikan { connected: true }
- *
- * Query:
- * - phoneNumber (required)
- * - filename (optional; kita nggak pake sekarang)
- * - type (optional)
+ * - Jika sudah registered/connected -> kembalikan { connected: true } (hanya jika socket sudah open)
  */
 Router.get("/", async (req, res) => {
   const phoneNumberRaw = req.query.phoneNumber;
@@ -120,18 +116,18 @@ Router.get("/", async (req, res) => {
   try {
     const sock = await ensureSocketForNumber(phoneNumber);
 
-    // kalau sudah registered credentials (artinya sudah paired)
+    // cek apakah creds sudah registered (paired before)
     const registered = Boolean(sock?.authState?.creds?.registered);
     if (!registered) {
       // generate pairing code
       await delay(500);
-      let pairingCode = await sock.requestPairingCode(phoneNumber, "GIENETIC");
+      let pairingCode = await sock.requestPairingCode(phoneNumber, "WHYUXD");
       pairingCode = pairingCode?.match(/.{1,4}/g)?.join("-") || pairingCode;
       console.log(`[${phoneNumber}] Pairing code:`, pairingCode);
       return res.status(200).json({ code: pairingCode });
     }
 
-    // kalau sudah registered, cek juga apakah socket ada di activeSockets dan masih 'open'
+    // jika sudah registered — hanya anggap connected jika socket benar-benar open & ada di map
     const isActive = activeSockets.has(phoneNumber);
     return res.status(200).json({ connected: !!isActive });
   } catch (err) {
@@ -159,8 +155,6 @@ Router.get("/status", async (req, res) => {
  *    owner (phoneNumber pemilik / socket yang aktif)
  *    type  (bug_a | bug_b | bug_c)
  *    target (nomor target)
- *
- * - Mengirim pesan ke target bergantung pada type.
  */
 Router.get("/action", async (req, res) => {
   const ownerRaw = req.query.owner;
@@ -180,25 +174,19 @@ Router.get("/action", async (req, res) => {
   const { sock } = activeSockets.get(owner);
   if (!sock) return res.status(500).json({ error: "Socket not available" });
 
-  // Pastikan format jid WA -> ending 's.whatsapp.net' for group? For individual: number@s.whatsapp.net
   const jid = target + "@s.whatsapp.net";
 
   try {
-    // compose message per tipe bug (sesuaikan ini dengan kebutuhanmu)
     let message = "";
     if (type === "bug_a") {
-      // multiple short messages (flood) - hati2 pakai ini
       message = "Ping! Ini test bug A.";
-      // kita kirim satu pesan tapi server bisa di-extend untuk loop
       await sock.sendMessage(jid, { text: message });
       return res.json({ success: true, message: "Pesan pendek terkirim (bug_a)" });
     } else if (type === "bug_b") {
-      // pesan panjang
       message = "Ini pesan panjang untuk bug B. ".repeat(30);
       await sock.sendMessage(jid, { text: message });
       return res.json({ success: true, message: "Pesan panjang terkirim (bug_b)" });
     } else if (type === "bug_c") {
-      // ping & info
       message = "PING\n\nInformasi: device terkonek via API.\nTime: " + new Date().toISOString();
       await sock.sendMessage(jid, { text: message });
       return res.json({ success: true, message: "Ping/info terkirim (bug_c)" });
@@ -213,15 +201,13 @@ Router.get("/action", async (req, res) => {
 
 /**
  * GET /connect/disconnect
- * - Query: phoneNumber
- * - Memaksa logout/putus socket dan hapus session
  */
 Router.get("/disconnect", async (req, res) => {
   const phoneNumberRaw = req.query.phoneNumber;
   if (!phoneNumberRaw) return res.status(400).json({ error: "phoneNumber required" });
   const phoneNumber = String(phoneNumberRaw).replace(/[^0-9]/g, "");
+
   if (!activeSockets.has(phoneNumber)) {
-    // hapus session files jika ada, walau socket tidak aktif
     const sessionPath = path.join(sessionDir, phoneNumber);
     try {
       await deleteTemp(false, sessionPath);
@@ -232,18 +218,11 @@ Router.get("/disconnect", async (req, res) => {
   }
 
   const { sock, statePath } = activeSockets.get(phoneNumber);
-  try {
-    // logout socket dan hapus files
-    await sock.logout();
-  } catch (e) {
-    // ignore
-  }
+  try { await sock.logout(); } catch(e){ /* ignore */ }
   try {
     activeSockets.delete(phoneNumber);
     await deleteTemp(false, statePath);
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { /* ignore */ }
   return res.json({ success: true, message: "Disconnected" });
 });
 
