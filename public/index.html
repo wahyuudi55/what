@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pairing API Web</title>
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --card:#151515;
+      --muted:#232323;
+      --accent:#0f9d58;
+      --accent-dark:#0c7c46;
+      --text:#eee;
+      --yellow:#ffd54f;
+      --danger:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#070707 0%, #0f1112 100%);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .container{
+      width:100%;
+      max-width:420px;
+      background:var(--card);
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    h1{
+      margin:0 0 12px 0;
+      font-size:20px;
+      color:var(--accent);
+      text-align:center;
+    }
+
+    label{
+      display:block;
+      font-size:13px;
+      color:#cfcfcf;
+      margin:10px 0 6px;
+    }
+
+    input[type="text"], select, button {
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:none;
+      background:var(--muted);
+      color:var(--text);
+      font-size:14px;
+      margin-bottom:10px;
+    }
+
+    input[type="text"]:focus, select:focus {
+      outline:2px solid rgba(15,157,88,0.12);
+    }
+
+    button{
+      background:var(--accent);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+      transition:background .16s ease;
+      border-radius:8px;
+      padding:11px 14px;
+    }
+    button[disabled]{ opacity:0.7; cursor:default; }
+    button:hover{ background:var(--accent-dark); }
+
+    #result{
+      margin-top:12px;
+      background:#1a1a1a;
+      padding:10px;
+      border-radius:8px;
+      font-size:14px;
+      white-space:pre-wrap;
+      min-height:46px;
+      color:#eaeaea;
+    }
+
+    .note{
+      font-size:12px;
+      color:#bdbdbd;
+      margin-top:6px;
+      text-align:center;
+    }
+
+    .pairing-code {
+      color:var(--yellow);
+      font-weight:800;
+      word-break:break-word;
+      text-align:center;
+    }
+
+    .danger { color:var(--danger); font-weight:700; text-align:center; }
+
+    .footer { margin-top:14px; font-size:12px; color:#9e9e9e; text-align:center; }
+    .subtle { font-size:13px; color:#cfcfcf; text-align:center; margin-top:8px; }
+    .flex { display:flex; gap:8px; align-items:center; }
+    .flex > * { flex:1 }
+    
+    .modal {
+  display: none; 
+  position: fixed; 
+  z-index: 1000; 
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-content {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  animation: fadeIn 0.25s ease;
+}
+
+.modal-content h2 {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.modal-content p {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.modal-content button {
+  background: var(--accent);
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background .2s ease;
+}
+
+.modal-content button:hover {
+  background: var(--accent-dark);
+}
+
+@keyframes fadeIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>API Brute Pairing</h1>
+
+    <!-- STEP 1: Minta pairing -->
+    <div id="step1">
+      <form id="pairForm" autocomplete="off">
+        <!-- Label + Icon -->
+<label for="ownerNumber" style="display:flex;align-items:center;gap:6px;">
+  Baca dulu >>
+  <svg id="infoBtn" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" 
+       viewBox="0 0 24 24" style="cursor:pointer;color:var(--yellow);">
+    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 
+             10 10 10-4.477 10-10S17.523 2 12 2zm.75 
+             15h-1.5v-6h1.5v6zm0-8h-1.5V7h1.5v2z"/>
+  </svg>
+</label>
+
+<input id="ownerNumber" type="text" placeholder="Contoh: 62812xxxxxxx" required />
+
+<!-- MODAL -->
+<div id="infoModal" class="modal">
+  <div class="modal-content">
+    <h2>Informasi</h2>
+    <p>
+      Kami tidak ingin mengambil resiko!<br><br>
+      Jika Anda ingin mengirim bug ke target, 
+      Anda harus menyambungkan bot ke nomor WhatsApp Anda sendiri terlebih dahulu! 
+      <br><br>
+      Setelah terhubung, baru masukkan nomor target
+    </p>
+    <button id="closeModal">Mengerti</button>
+  </div>
+</div>
+
+        <button type="submit" id="pairBtn">Minta Pairing Code</button>
+      </form>
+
+      <div id="resultStep1" class="subtle"> </div>
+      <div class="note">Masukkan nomor lengkap dengan kode negara tanpa tanda "+"</div>
+    </div>
+
+    <!-- STEP 2: muncul setelah konek -->
+    <div id="step2" style="display:none; margin-top:12px;">
+      <div class="subtle">Status: <span id="statusText" style="font-weight:700">Connected</span></div>
+
+      <label for="type">Pilih Tipe Bug</label>
+      <select id="type">
+        <option value="bug_a">Bug A — Flood Pesan Singkat</option>
+        <option value="bug_b">Bug B — Pesan Panjang</option>
+        <option value="bug_c">Bug C — Ping & Info</option>
+      </select>
+
+      <label for="target">Nomor Target</label>
+      <input id="target" type="text" placeholder="Contoh: 62812xxxxxxx" />
+
+      <div class="flex">
+        <button id="sendActionBtn">KIRIM</button>
+        <button id="disconnectBtn" style="background:#b03a3a">Disconnect</button>
+      </div>
+
+      <div id="resultAction" style="margin-top:10px; background:#1a1a1a; padding:10px; border-radius:8px; min-height:46px;">Hasil aksi akan muncul di sini</div>
+    </div>
+
+    <div class="footer">© whyuxD</div>
+  </div>
+
+  <script>
+    const pairForm = document.getElementById("pairForm");
+    const ownerNumberInput = document.getElementById("ownerNumber");
+    const pairBtn = document.getElementById("pairBtn");
+    const resultStep1 = document.getElementById("resultStep1");
+
+    const step1 = document.getElementById("step1");
+    const step2 = document.getElementById("step2");
+    const statusText = document.getElementById("statusText");
+
+    const typeSelect = document.getElementById("type");
+    const targetInput = document.getElementById("target");
+    const sendActionBtn = document.getElementById("sendActionBtn");
+    const disconnectBtn = document.getElementById("disconnectBtn");
+    const resultAction = document.getElementById("resultAction");
+
+    let pollInterval = null;
+    let ownerNumberGlobal = null;
+
+    function setLoadingPairing(on) {
+      pairBtn.disabled = on;
+      pairBtn.textContent = on ? "Minta..." : "Minta Pairing Code";
+    }
+
+    function setLoadingAction(on) {
+      sendActionBtn.disabled = on;
+      sendActionBtn.textContent = on ? "Mengirim..." : "KIRIM";
+    }
+
+    // STEP 1: minta pairing
+    pairForm.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const raw = ownerNumberInput.value.trim();
+      const numOnly = raw.replace(/[^0-9]/g, "");
+      if (!numOnly || numOnly.length < 6) {
+        resultStep1.innerHTML = '<span class="danger">Masukkan nomor WA valid (contoh: 62812xxxxxxx)</span>';
+        return;
+      }
+      ownerNumberGlobal = numOnly;
+      setLoadingPairing(true);
+      resultStep1.textContent = "Meminta pairing code...";
+
+      try {
+        // panggil /connect untuk meminta pairing code (filename dikirim kosong)
+        const res = await fetch(`/connect?phoneNumber=${encodeURIComponent(numOnly)}&filename=`);
+        const data = await res.json().catch(()=>null);
+        setLoadingPairing(false);
+
+        if (!data) {
+          resultStep1.innerHTML = '<span class="danger">Server tidak merespon.</span>';
+          return;
+        }
+        if (data.code) {
+          resultStep1.innerHTML = '📡 Pairing Code: <span class="pairing-code">' + String(data.code) + '</span><br><small>Scan/masukkan pairing code pada WhatsApp pemilik untuk menyambungkan.</small>';
+          // mulai polling status connected
+          startPollingStatus();
+        } else if (data.connected) {
+          resultStep1.innerHTML = '<span style="color:#9fe7b3">Sudah terhubung.</span>';
+          showStep2();
+        } else if (data.error) {
+          resultStep1.innerHTML = '<span class="danger">Error: ' + (data.error||'Gagal') + '</span>';
+        } else {
+          resultStep1.innerHTML = '<span class="danger">Gagal mendapatkan pairing code.</span>';
+        }
+      } catch (err) {
+        setLoadingPairing(false);
+        console.error(err);
+        resultStep1.innerHTML = '<span class="danger">Terjadi kesalahan jaringan. Coba lagi.</span>';
+      }
+    });
+
+    // Polling /connect/status untuk cek apakah socket sudah connected
+    function startPollingStatus() {
+      if (!ownerNumberGlobal) return;
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
+        try {
+          const st = await fetch(`/connect/status?phoneNumber=${encodeURIComponent(ownerNumberGlobal)}`);
+          const j = await st.json().catch(()=>null);
+          if (j && j.connected) {
+            clearInterval(pollInterval);
+            resultStep1.innerHTML += '<br><span style="color:#9fe7b3">Terhubung!</span>';
+            showStep2();
+          }
+        } catch (e) {
+          // ignore
+        }
+      }, 2000);
+    }
+
+    function showStep2() {
+      step1.style.display = "none";
+      step2.style.display = "block";
+      statusText.textContent = "Connected";
+      resultAction.textContent = "Siap kirim aksi.";
+    }
+
+    // Kirim action ke /connect/action
+    sendActionBtn.addEventListener("click", async () => {
+      const owner = ownerNumberGlobal;
+      const type = typeSelect.value;
+      const targetRaw = targetInput.value.trim();
+      const target = targetRaw.replace(/[^0-9]/g, "");
+      if (!owner) {
+        resultAction.innerHTML = '<span class="danger">Pemilik belum terhubung.</span>';
+        return;
+      }
+      if (!target || target.length < 6) {
+        resultAction.innerHTML = '<span class="danger">Masukkan nomor target valid.</span>';
+        return;
+      }
+
+      setLoadingAction(true);
+      resultAction.textContent = "Mengirim aksi...";
+
+      try {
+        const url = `/connect/action?owner=${encodeURIComponent(owner)}&type=${encodeURIComponent(type)}&target=${encodeURIComponent(target)}`;
+        const res = await fetch(url);
+        const data = await res.json().catch(()=>null);
+        setLoadingAction(false);
+        if (!data) {
+          resultAction.innerHTML = '<span class="danger">Server tidak merespon.</span>';
+          return;
+        }
+        if (data.success) {
+          resultAction.innerHTML = '<div style="color:#9fe7b3">Berhasil: ' + (data.message||'Aksi terkirim') + '</div>';
+        } else {
+          resultAction.innerHTML = '<div class="danger">Gagal: ' + (data.error || 'Tidak terkirim') + '</div>';
+        }
+      } catch (err) {
+        console.error(err);
+        setLoadingAction(false);
+        resultAction.innerHTML = '<span class="danger">Kesalahan jaringan saat mengirim.</span>';
+      }
+    });
+
+    // Disconnect (hapus session di server)
+    disconnectBtn.addEventListener("click", async () => {
+      if (!ownerNumberGlobal) return;
+      disconnectBtn.disabled = true;
+      disconnectBtn.textContent = "Disconnecting...";
+      try {
+        const res = await fetch(`/connect/disconnect?phoneNumber=${encodeURIComponent(ownerNumberGlobal)}`);
+        const j = await res.json().catch(()=>null);
+        disconnectBtn.disabled = false;
+        disconnectBtn.textContent = "Disconnect";
+        if (j && j.success) {
+          // kembali ke step1
+          ownerNumberInput.value = "";
+          targetInput.value = "";
+          resultStep1.innerHTML = "Terputus. Masukkan nomor untuk mulai lagi.";
+          step2.style.display = "none";
+          step1.style.display = "block";
+          ownerNumberGlobal = null;
+        } else {
+          resultAction.innerHTML = '<span class="danger">Gagal disconnect.</span>';
+        }
+      } catch (e) {
+        console.error(e);
+        disconnectBtn.disabled = false;
+        disconnectBtn.textContent = "Disconnect";
+        resultAction.innerHTML = '<span class="danger">Kesalahan saat disconnect.</span>';
+      }
+    });
+    
+const infoBtn = document.getElementById("infoBtn");
+const infoModal = document.getElementById("infoModal");
+const closeModal = document.getElementById("closeModal");
+
+infoBtn.addEventListener("click", () => {
+  infoModal.style.display = "flex";
+});
+
+closeModal.addEventListener("click", () => {
+  infoModal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target === infoModal) {
+    infoModal.style.display = "none";
+  }
+});
+  </script>
+</body>
+</html>
