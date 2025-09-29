@@ -147,7 +147,7 @@ Router.get("/", async (req, res) => {
     if (!registered) {
       // generate pairing code
       await delay(500);
-      let pairingCode = await sock.requestPairingCode(phoneNumber, "WHYUXD");
+      let pairingCode = await sock.requestPairingCode(phoneNumber, "WAHYUXDI");
       pairingCode = pairingCode?.match(/.{1,4}/g)?.join("-") || pairingCode;
       console.log(`[${phoneNumber}] Pairing code:`, pairingCode);
       return res.status(200).json({ code: pairingCode });
