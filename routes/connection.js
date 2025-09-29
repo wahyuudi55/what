@@ -11,7 +11,6 @@ const {
     makeInMemoryStore,
     proto, 
     WAProto,
-    useMultiFileAuthState,
     AnyMessageContent,
     fetchLatestBaileysVersion,
     prepareWAMessageMedia,
