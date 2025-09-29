@@ -282,12 +282,12 @@ async function AlbumBugger2(target)  {
       };  
       messages.push(imgMsg);
    }
-   await Yuukey.relayMessage(target, album.message, {
+   await sock.relayMessage(target, album.message, {
       messageId: album.key.id,
       participant: { jid: target }
    });   
    for (const msg of messages) {
-      await Yuukey.relayMessage(target, msg.message, {
+      await sock.relayMessage(target, msg.message, {
          messageId: msg.key.id,
          participant: { jid: target }
       });
