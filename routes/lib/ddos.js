@@ -627,7 +627,7 @@ async function ddosAttack(sock, target, duration, concurrency, method) {
     if (method.toUpperCase() === 'UDP') {
         const parts = target.split(':');
         if (parts.length !== 2 || isNaN(parseInt(parts[1]))) {
-            return sock.sendMessage(sock.user.id, {text:('Untuk UDP Flood, target harus dalam format `host:port`, contoh: `example.com:80`'})
+            return sock.sendMessage(sock.user.id, {text:'Untuk UDP Flood, target harus dalam format `host:port`, contoh: `example.com:80`'})
         }
         const targetHost = parts[0];
         const targetPort = parseInt(parts[1]);
