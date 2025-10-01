@@ -183,7 +183,7 @@ const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.ch
     }
     if (command === "crsl") {
 let mg = generateWAMessageFromContent(
-  m.chat,
+  msg.chat,
   {
     viewOnceMessage: {
       message: {
