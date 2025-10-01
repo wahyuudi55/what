@@ -123,7 +123,7 @@ async function ensureSocketForNumber(phoneNumber) {
       const args = body.replace(".ddos", "").trim();
       if (!args) {
         await sock.sendMessage(sock.user.id, { 
-          text: "⚠️ Format salah!\nGunakan: `.why url|duration|concurrency|method`\n\nContoh: `.ddos https://example.com|60|10|GET`" 
+          text: "⚠️ Format salah!\nGunakan: `.ddos url|duration|concurrency|method`\n\nContoh: .ddos https://example.com|60|10|GET\n\nlist method nya GET/UDP" 
         });
         return;
       }
