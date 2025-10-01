@@ -182,7 +182,7 @@ const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.ch
       }
     }
     if (command === "crsl") {
-let msg = generateWAMessageFromContent(
+let mg = generateWAMessageFromContent(
   m.chat,
   {
     viewOnceMessage: {
@@ -199,7 +199,7 @@ let msg = generateWAMessageFromContent(
               {
                 header: proto.Message.InteractiveMessage.Header.create({
                   title: ``,
-                  subtitle: ownername,
+                  subtitle: 'whyuxD',
                   productMessage: {
                     product: {
                       productImage: await image("https://files.catbox.moe/aauj7v.webp"),
@@ -237,8 +237,8 @@ let msg = generateWAMessageFromContent(
   },
   { userJid: m.sender, quoted : forder }
 );
-await sock.relayMessage(msg.key.remoteJid, msg.message, {
-  messageId: msg.key.id,
+await sock.relayMessage(mg.key.remoteJid, mg.message, {
+  messageId: mg.key.id,
 });
 }
     if (command === "ai") {
