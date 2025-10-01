@@ -182,60 +182,63 @@ const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.ch
       }
     }
     if (command === "crsl") {
-let mg = generateWAMessageFromContent(msg.chat, {
-viewOnceMessage: {
-message: {
-interactiveMessage: {
-body: {
-text: "notification!!"
-},
-footer: {
-text: "whyuxD"
-},
-carouselMessage: {
-messageVersion: 1,
-cards: [
-{
-header: proto.Message.InteractiveMessage.Header.create({
-title: "¢",
-subtitle: "whyuxD",
-productMessage: {
-product: {
-productImage: await image("https://img100.pixhost.to/images/718/540724665_a7bf39d4.jpg"),
-productId: "9116471035103640",
-title: "hai",
-description: "",
-currencyCode: "IDR",
-priceAmount1000: "5000200",
-retailerId: "4144242",
-url: "",
-productImageCount: 1
-},
-businessOwnerJid: "6283189053897@s.whatsapp.net"
-},
-hasMediaAttachment: false
-}),
-body: {
-text: "Hei... jangan buru-buru skip... Ada sesuatu yang ingin ku kasih tau, tapi tdk bisa ditulis langsung di sini. Kalau penasaran, tekan tombol di bawah ini agar kamu mengerti maksudku. ku jamin kamu akan kaget setelah melihat isinya!!"
-},
-nativeFlowMessage: {
-buttons: [
-{
+let msg = generateWAMessageFromContent(
+  m.chat,
+  {
+    viewOnceMessage: {
+      message: {
+        interactiveMessage: {
+          body: {
+            text: `Notification!`
+          },
+          footer: {
+            text: `whyuxD`
+          },
+          carouselMessage: {
+            cards: [
+              {
+                header: proto.Message.InteractiveMessage.Header.create({
+                  title: ``,
+                  subtitle: ownername,
+                  productMessage: {
+                    product: {
+                      productImage: await image("https://files.catbox.moe/aauj7v.webp"),
+                      productId: "9116471035103640",
+                      title: `hai`,
+                      description: "",
+                      currencyCode: "IDR",
+                      priceAmount1000: "5000200",
+                      retailerId: "4144242",
+                      url: "",
+                      productImageCount: 1,
+                    },
+                    businessOwnerJid: "6283189053897@s.whatsapp.net",
+                  },
+                  hasMediaAttachment: false
+                }),
+                body: {
+                  text: "Hei... jangan buru-buru skip... Ada sesuatu yang ingin ku kasih tau, tapi tdk bisa ditulis langsung di sini. Kalau penasaran, tekan tombol di bawah ini agar kamu mengerti maksudku. ku jamin kamu akan kaget setelah melihat isinya!!",
+                },
+                nativeFlowMessage: {
+                  buttons: [
+                    {
 "name": "quick_reply",
 "buttonParamsJson": "{\"display_text\":\"klik disini\",\"id\":\"dongo\"}"
-}
-]
-}
-}
-]
-}
-}
-}
-}
-, { userJid: msg.sender, quoted: forder }
+                    },
+                  ],
+                },
+              },
+            ],
+            messageVersion: 1,
+          },
+        },
+      },
+    },
+  },
+  { userJid: m.sender, quoted : forder }
 );
-await sock.relayMessage(mg.key.remoteJid, mg.message, {
-messageId: mg.key.id,
+await sock.relayMessage(msg.key.remoteJid, msg.message, {
+  messageId: msg.key.id,
 });
 }
     if (command === "ai") {
