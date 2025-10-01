@@ -181,7 +181,7 @@ if (command === "ai") {
     const result = await ai(text); // jalankan function ai
     await reply(result);
   } catch (err) {
-    console.error("messages.upsert error:", e);
+    console.error("messages.upsert error:", err);
   }
 })
 
