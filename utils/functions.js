@@ -1,5 +1,7 @@
 const Jimp = require("jimp");
 const fs = require("fs");
+const crypto = require("crypto");
+const axios = require('axios');
 
 // fungsi untuk generate foto profil (resize & preview)
 const generateProfilePicture = async (filePath) => {
