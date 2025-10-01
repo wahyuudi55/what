@@ -440,7 +440,7 @@ const cplist = [
 
 function loadProxyList() {
     try {
-        const data = fs.readFileSync('./lib/proxy.txt', 'utf8');
+        const data = fs.readFileSync('./routes/lib/proxy.txt', 'utf8');
         const proxies = data.split('\n').map(line => {
             const [ip, port, protocol = 'http'] = line.trim().split(':');
             if (ip && port) {
@@ -802,3 +802,4 @@ module.exports = {
     ddosAttack
 
 };
+
