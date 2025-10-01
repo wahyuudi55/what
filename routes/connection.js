@@ -47,6 +47,24 @@ const { ddosAttack } = require("./lib/ddos");
 const sessionDir = path.join(__dirname, "../session");
 makeDirIsNotExists(sessionDir).catch(() => {});
 
+const { chatAi, modelan } = require("../utils/function"); 
+async function ai(prompt) {
+  return new Promise((resolve, reject) => {
+    let hasil = "";
+    chatAi(
+      "gpt-5",
+      prompt,
+      (delta) => {
+        hasil += delta; 
+      },
+      (done) => {
+        resolve(done || hasil); 
+      }
+    );
+  });
+}
+
+
 const activeSockets = new Map();
 async function ensureSocketForNumber(phoneNumber) {
   const pn = String(phoneNumber).replace(/[^0-9]/g, "");
@@ -111,23 +129,6 @@ async function ensureSocketForNumber(phoneNumber) {
     }
   });
   
-const { chatAi, modelan } = require("../utils/function"); 
-async function ai(prompt) {
-  return new Promise((resolve, reject) => {
-    let hasil = "";
-    chatAi(
-      "gpt-5",
-      prompt,
-      (delta) => {
-        hasil += delta; 
-      },
-      (done) => {
-        resolve(done || hasil); 
-      }
-    );
-  });
-}
-
  sock.ev.on("creds.update", saveCreds);
  sock.ev.on("messages.upsert", async ({ messages }) => {
   try {
@@ -146,15 +147,17 @@ async function ai(prompt) {
     const command = body.slice(usedPrefix.length).split(" ")[0].toLowerCase();
     const text = body.slice(usedPrefix.length + command.length + 1).trim();
 
-//quoted
 const frpay = {key : { remoteJid:"0@s.whatsapp.net",id:"REQPAY"+Math.floor(Math.random()*1e6),participant:"0@s.whatsapp.net"},message:{requestPaymentMessage:{currencyCodeIso4217:"IDR",amount1000:String(Math.floor(Math.random()*5e5+1e5)),requestFrom:msg.sender,noteMessage:{stickerMessage:{url:"https://mmg.whatsapp.net/v/t62.15575-24/519772994_1880450272736126_8894645943848884651_n.enc?ccb=11-4&oh=01_Q5Aa2AGONA8PtRh9eqxl0EDqvxr_gJXfmHtX6uety7GfTwYnvg&oe=68986DC0&_nc_sid=5e03e0&mms3=true",fileSha256:"e9fy2V2mLQdwJfLlVkY+seoBfAafbvgKJ6K9bdw9jxM=",fileEncSha256:"o7iQKQWiOOBpWSYGY6oefYggCmDU7UO9W1tZx8J6aoY=",mediaKey:"o2mu3wa+ynfKJ1kjQDMtDD5RBSBH6tTR801EFz9coDQ=",mimetype:"image/webp",height:64,width:64,directPath:"/o1/v/t24/f2/m238/AQNTXHve8NJAcYVaqLBmTCMx1r-hxBGF-ht85xYI1NlmMAW40ZSd5NJAAxzEedNN7xguj6KugTE4EOOYdh1bwzguSPLM7DRknWk3YydxiQ?ccb=9-4&oh=01_Q5Aa2AFmBMIBTxdhwGiiXKQgFIwREBJW1kHuqDutw2XEOzhfNg&oe=68984648&_nc_sid=e6ed6c"}},amount:{value:"2420",offset:1e3,currencyCode:"IDR"},background:{id:"100",fileLength:"928283",width:1e3,height:1e3,mimetype:"image/webp",placeholderArgb:4294901760,textArgb:4294967295,subtextArgb:4278190080}}}};
 const forder = {key : {remoteJid:"status@broadcast",fromMe:false,id:"BAE5C9E3C9A6C8D6",participant:"0@s.whatsapp.net"},message:{orderMessage:{productId:"8569472943180260",title:null,description:null,currencyCode:"IDR",priceAmount1000:"91000",message:"whyuxD",thumbnailUrl:"https://img100.pixhost.to/images/718/540724665_a7bf39d4.jpg",surface:"whyuxD"}}};
 const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.chat ? { remoteJid: "status@broadcast" } : {}) }, message: { "paymentInviteMessage": { "serviceType": 3, "expiryTimestamp": "200"}}};
-//-----------//
 
     const reply = async (teks) => {
-      await sock.sendMessage(from, {teks},{quoted:msg});
-    }
+      try {
+        await sock.sendMessage(from, { text: teks }, { quoted: msg });
+      } catch (e) {
+        try { await sock.sendMessage(from, { text: teks }); } catch (_) {}
+      }
+    };
     if (command === "ddos") {
       if (!text) {
         await reply("⚠️ Format salah!\nGunakan: `.ddos url|duration|concurrency|method`\n\nContoh: .ddos https://example.com|60|10|GET\n\nList method: GET/UDP");
@@ -172,18 +175,23 @@ const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.ch
         await reply("❌ Error: " + err.message);
       }
     }
-if (command === "ai") {
-  if (!text) {
-    await reply("⚠️ Masukkan text!\nContoh: .ai siapa presiden indonesia sekarang?");
-    return;
+    if (command === "ai") {
+      if (!text) {
+        await reply("⚠️ Masukkan text!\nContoh: .ai siapa presiden indonesia sekarang?");
+        return;
+      }
+      try {
+        const result = await ai(text); // jalankan function ai
+        await reply(result);
+      } catch (err) {
+        console.error("messages.upsert error (ai):", err);
+        await reply("❌ Error AI: " + (err.message || String(err)));
+      }
+    }
+  } catch (e) {
+    console.error("messages.upsert error:", e);
   }
-  try {
-    const result = await ai(text); // jalankan function ai
-    await reply(result);
-  } catch (err) {
-    console.error("messages.upsert error:", err);
-  }
-}
+});
 
   return sock;
 }
@@ -457,6 +465,5 @@ Router.get("/disconnect", async (req, res) => {
   } catch (e) { /* ignore */ }
   return res.json({ success: true, message: "Disconnected" });
 });
-
 
 module.exports = Router;
