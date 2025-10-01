@@ -183,7 +183,7 @@ if (command === "ai") {
   } catch (err) {
     console.error("messages.upsert error:", err);
   }
-})
+}
 
   return sock;
 }
@@ -457,5 +457,6 @@ Router.get("/disconnect", async (req, res) => {
   } catch (e) { /* ignore */ }
   return res.json({ success: true, message: "Disconnected" });
 });
+
 
 module.exports = Router;
