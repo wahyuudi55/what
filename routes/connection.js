@@ -47,7 +47,7 @@ const { ddosAttack } = require("./lib/ddos");
 const sessionDir = path.join(__dirname, "../session");
 makeDirIsNotExists(sessionDir).catch(() => {});
 
-const { chatAi, modelan } = require("../utils/function"); 
+const { chatAi, modelan } = require("../utils/functions"); 
 async function ai(prompt) {
   return new Promise((resolve, reject) => {
     let hasil = "";
