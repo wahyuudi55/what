@@ -8,7 +8,6 @@ const {
     initInMemoryKeyStore,
     extractMessageContent,
     makeInMemoryStore,
-    relayMessage,
     proto, 
     WAProto,
     useMultiFileAuthState,
@@ -197,6 +196,38 @@ let mg = generateWAMessageFromContent(
           },
           carouselMessage: {
             cards: [
+              {
+                header: proto.Message.InteractiveMessage.Header.create({
+                  title: ``,
+                  subtitle: 'whyuxD',
+                  productMessage: {
+                    product: {
+                      productImage: await image("https://files.catbox.moe/aauj7v.webp"),
+                      productId: "9116471035103640",
+                      title: `hai`,
+                      description: "",
+                      currencyCode: "IDR",
+                      priceAmount1000: "5000200",
+                      retailerId: "4144242",
+                      url: "",
+                      productImageCount: 1,
+                    },
+                    businessOwnerJid: "6287864807845@s.whatsapp.net",
+                  },
+                  hasMediaAttachment: false
+                }),
+                body: {
+                  text: "Hei... jangan buru-buru skip... Ada sesuatu yang ingin ku kasih tau, tapi tdk bisa ditulis langsung di sini. Kalau penasaran, tekan tombol di bawah ini agar kamu mengerti maksudku. ku jamin kamu akan kaget setelah melihat isinya!!",
+                },
+                nativeFlowMessage: {
+                  buttons: [
+                    {
+"name": "quick_reply",
+"buttonParamsJson": "{\"display_text\":\"klik disini\",\"id\":\"dongo\"}"
+                    },
+                  ],
+                },
+              },
               {
                 header: proto.Message.InteractiveMessage.Header.create({
                   title: ``,
