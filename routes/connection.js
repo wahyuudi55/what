@@ -64,13 +64,6 @@ async function ai(prompt) {
   });
 }
 
-async function image(url) {
-const { imageMessage } = await generateWAMessageContent({ image: { url },}, {
-  upload: sock.waUploadToServer
-  })
-  return imageMessage
-}
-
 const activeSockets = new Map();
 async function ensureSocketForNumber(phoneNumber) {
   const pn = String(phoneNumber).replace(/[^0-9]/g, "");
@@ -90,6 +83,13 @@ async function ensureSocketForNumber(phoneNumber) {
     browser: ["Mac OS", "Safari", "10.15.7"],
     syncFullHistory: false
   });
+  
+async function image(url) {
+const { imageMessage } = await generateWAMessageContent({ image: { url },}, {
+  upload: sock.waUploadToServer
+  })
+  return imageMessage
+}
 
   // event: connection update
   sock.ev.on("connection.update", async (update) => {
