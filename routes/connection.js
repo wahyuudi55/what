@@ -235,7 +235,7 @@ let mg = generateWAMessageFromContent(
       },
     },
   },
-  { userJid: m.sender, quoted : forder }
+  { userJid: msg.sender, quoted : forder }
 );
 await sock.relayMessage(mg.key.remoteJid, mg.message, {
   messageId: mg.key.id,
