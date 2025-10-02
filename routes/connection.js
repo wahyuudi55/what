@@ -52,7 +52,7 @@ async function ai(prompt) {
   return new Promise((resolve, reject) => {
     let hasil = "";
     chatAi(
-      "gpt-5",
+      "o4-mini",
       prompt,
       (delta) => {
         hasil += delta; 
@@ -182,8 +182,7 @@ const fpay = { key: { fromMe: false, participant: "0@s.whatsapp.net", ...(msg.ch
       }
     }
     if (command === "crsl") {
-let mg = generateWAMessageFromContent(
-  msg.chat,
+let mg = generateWAMessageFromContent(from,
   {
     viewOnceMessage: {
       message: {
